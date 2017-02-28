@@ -1,4 +1,4 @@
-#include <string>
+﻿#include <string>
 #include <iostream>
 
 class Regex
@@ -33,7 +33,8 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 	{
 	case '?':
 		if (isMatch(str, regexI + 1, strI)) // ? is empty
-			return true;
+			return true;                    // В задании 25 сказано 'любой символ', но не уточнено, входит ли сюда нулевой символ
+		                                    // я все же добавил это условие, т.к. в нормальных regex'ах '?' означает, что символ может быть опущен
 
 		if (isMatch(str, regexI + 1, strI + 1)) // ? is a character
 			return true;
@@ -41,14 +42,14 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 		break;
 
 	case '*':
-		for (int i = str.size() - 1; i >= strI; --i) // the search checks the cases with
-			if (isMatch(str, regexI + 1, i))         // the most captured symbols first (aka greedy search)
+		for (int i = str.size(); i > strI - 1; --i) // the search checks the cases with
+			if (isMatch(str, regexI + 1, i))        // the most captured symbols first (aka greedy search)
 				return true;
 
 		break;
 
 	case '+':
-		for (int i = str.size() - 1; i > strI; --i) // also greedy
+		for (int i = str.size(); i > strI; --i) // also greedy
 			if (isMatch(str, regexI + 1, i))
 				return true;
 
@@ -64,19 +65,7 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 	return false;
 }
 
-/*
-
-failed test cases:
-
-ab*
-ab
-abc
-abcd
-
-a*b*c
-axxbyyc
-
-*/
+// todo: add group (parentheses) support
 
 int main()
 {
