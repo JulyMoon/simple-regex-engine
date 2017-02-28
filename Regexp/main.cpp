@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 
 class Regex
 {
@@ -25,8 +26,8 @@ bool Regex::isMatch(const std::string& str)
 
 bool Regex::isMatch(const std::string& str, int regexI, int strI)
 {
-	if (strI >= str.size() || regexI >= regex.size())
-		return false;
+	if (strI >= str.size() && regexI >= regex.size()) // this means that the regex must match the WHOLE string
+		return true;                                  // (equivalent of surrounding the regex with ^ and & in other engines)
 
 	switch (regex[regexI])
 	{
@@ -43,6 +44,21 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 		for (int i = str.size() - 1; i >= strI; --i) // the search checks the cases with
 			if (isMatch(str, regexI + 1, i))         // the most captured symbols first (aka greedy search)
 				return true;
+
+		break;
+
+	case '+':
+		for (int i = str.size() - 1; i > strI; --i) // also greedy
+			if (isMatch(str, regexI + 1, i))
+				return true;
+
+		break;
+
+	default:
+		if (regex[regexI] == str[strI] && isMatch(str, regexI + 1, strI + 1))
+			return true;
+
+		break;
 	}
 
 	return false;
@@ -50,7 +66,39 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 
 /*
 
+failed test cases:
+
+ab*
+ab
+abc
+abcd
+
 a*b*c
 axxbyyc
 
 */
+
+int main()
+{
+	std::string regex;
+
+	std::cout << "Regex: ";
+	std::getline(std::cin, regex);
+
+	Regex re(regex);
+
+	while (true)
+	{
+		std::string str;
+
+		std::cout << "String: ";
+		std::getline(std::cin, str);
+
+		if (str == "exit")
+			break;
+
+		std::cout << "Result: " << (re.isMatch(str) ? "match found!" : "no match found") << std::endl;
+	}
+
+	return 0;
+}
