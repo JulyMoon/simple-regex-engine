@@ -55,6 +55,28 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 
 		break;
 
+	case '(':
+	{
+		int depth = 1;
+		int i = regexI + 1;
+
+		while (true)
+		{
+			switch (regex[i])
+			{
+			case '(': depth++; break;
+			case ')': depth--; break;
+			}
+
+			if (depth == 0)
+			{
+				// todo
+			}
+		}
+	}
+
+		break;
+
 	default:
 		if (regex[regexI] == str[strI] && isMatch(str, regexI + 1, strI + 1))
 			return true;
