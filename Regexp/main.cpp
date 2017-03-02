@@ -87,7 +87,7 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 		default: throw "invalid regex (wrong symbol after brackets)";
 		}
 
-		std::string inbetween = str.substr(regexI + 1, closingI - regexI - 1);
+		std::string inbetween = regex.substr(regexI + 1, closingI - regexI - 1);
 		Regex subRegex(inbetween);
 
 		int leftI = strI;
@@ -99,7 +99,7 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 			for (rightI = str.size() - 1; rightI >= leftI - 1; --rightI)
 			{
 				std::string newStr = str.substr(leftI, rightI - leftI + 1);
-				if (subRegex.isMatch(newStr, 0, leftI))
+				if (subRegex.isMatch(newStr, 0, 0))
 				{
 					matchFound = true;
 					break;
