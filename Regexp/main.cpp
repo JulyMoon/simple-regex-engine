@@ -58,10 +58,13 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 	case '(':
 	{
 		int depth = 1;
-		int i = regexI + 1;
+		int i = regexI;
 
 		while (true)
 		{
+			if (++i >= regex.size())
+				throw "invalid regex (no closing bracket)";
+
 			switch (regex[i])
 			{
 			case '(': depth++; break;
@@ -70,8 +73,29 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 
 			if (depth == 0)
 			{
-				// todo
+				if (i - regexI == 1)
+					throw "invalid regex (empty brackets)";
+
+				break;
 			}
+		}
+
+		switch (regex[i + 1])
+		{
+		case '*':
+			// todo
+			break;
+
+		case '+':
+
+			break;
+
+		case '_':
+
+			break;
+
+		default:
+			throw "invalid regex (wrong symbol after brackets)";
 		}
 	}
 
