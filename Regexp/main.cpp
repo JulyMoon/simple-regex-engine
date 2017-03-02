@@ -26,30 +26,29 @@ bool Regex::isMatch(const std::string& str)
 
 bool Regex::isMatch(const std::string& str, int regexI, int strI)
 {
-	if (strI >= str.size() && regexI >= regex.size()) // this means that the regex must match the WHOLE string
-		return true;                                  // (equivalent of surrounding the regex with ^ and & in other engines)
+	if (strI >= str.size() && regexI >= regex.size())
+		return true;
 
 	switch (regex[regexI])
 	{
 	case '?':
-		if (isMatch(str, regexI + 1, strI)) // ? is empty
-			return true;                    // В задании 25 сказано 'любой символ', но не уточнено, входит ли сюда нулевой символ
-		                                    // я все же добавил это условие, т.к. в нормальных regex'ах '?' означает, что символ может быть опущен
+		if (isMatch(str, regexI + 1, strI))
+			return true;
 
-		if (isMatch(str, regexI + 1, strI + 1)) // ? is a character
+		if (isMatch(str, regexI + 1, strI + 1))
 			return true;
 
 		break;
 
 	case '*':
-		for (int i = str.size(); i > strI - 1; --i) // the search checks the cases with
-			if (isMatch(str, regexI + 1, i))        // the most captured symbols first (aka greedy search)
+		for (int i = str.size(); i > strI - 1; --i)
+			if (isMatch(str, regexI + 1, i))
 				return true;
 
 		break;
 
 	case '+':
-		for (int i = str.size(); i > strI; --i) // also greedy
+		for (int i = str.size(); i > strI; --i)
 			if (isMatch(str, regexI + 1, i))
 				return true;
 
@@ -58,14 +57,14 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 	case '(':
 	{
 		int depth = 1;
-		int i = regexI;
+		int closingI = regexI;
 
 		while (true)
 		{
-			if (++i >= regex.size())
+			if (++closingI >= regex.size())
 				throw "invalid regex (no closing bracket)";
 
-			switch (regex[i])
+			switch (regex[closingI])
 			{
 			case '(': depth++; break;
 			case ')': depth--; break;
@@ -73,30 +72,57 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 
 			if (depth == 0)
 			{
-				if (i - regexI == 1)
+				if (closingI - regexI == 1)
 					throw "invalid regex (empty brackets)";
 
 				break;
 			}
 		}
 
-		switch (regex[i + 1])
+		switch (regex[closingI + 1])
 		{
-		case '*':
-			// todo
-			break;
-
-		case '+':
-
-			break;
-
-		case '_':
-
-			break;
-
-		default:
-			throw "invalid regex (wrong symbol after brackets)";
+		case '*': break;
+		case '+': break;
+		case '_': break;
+		default: throw "invalid regex (wrong symbol after brackets)";
 		}
+
+		std::string inbetween = str.substr(regexI + 1, closingI - regexI - 1);
+		Regex subRegex(inbetween);
+
+		int leftI = strI;
+		int matches = 0;
+		while (true) // checkpoint loop
+		{
+			bool matchFound = false;
+			int rightI;
+			for (rightI = str.size() - 1; rightI >= leftI - 1; --rightI)
+			{
+				std::string newStr = str.substr(leftI, rightI - leftI + 1);
+				if (subRegex.isMatch(newStr, 0, leftI))
+				{
+					matchFound = true;
+					break;
+				}
+			}
+
+			if (!matchFound)
+				break;
+
+			leftI = rightI + 1;
+			matches++;
+		}
+
+		bool symbolCondition;
+		switch (regex[closingI + 1])
+		{
+		case '*': symbolCondition = true; break;
+		case '+': symbolCondition = matches > 0; break;
+		case '_': symbolCondition = matches < 2; break;
+		default: throw "this should never be thrown";
+		}
+
+		return symbolCondition && isMatch(str, closingI + 2, leftI);
 	}
 
 		break;
@@ -107,7 +133,6 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 
 		break;
 	}
-
 	return false;
 }
 
