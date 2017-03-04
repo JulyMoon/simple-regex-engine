@@ -1,4 +1,5 @@
 ﻿#include <string>
+#include <vector>
 #include <iostream>
 
 class Regex
@@ -12,6 +13,8 @@ private:
 	std::string regex;
 
 	bool isMatch(const std::string& str, int regexI, int strI);
+
+	void getCapturePermutations(const std::string& str, int leftI, int matches, std::vector<int>& matchesStrI, std::vector<int>& matchCount);
 };
 
 Regex::Regex(const std::string& regex)
@@ -79,7 +82,9 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 			}
 		}
 
-		switch (regex[closingI + 1])
+		char type = regex[closingI + 1];
+
+		switch (type)
 		{
 		case '*': break;
 		case '+': break;
@@ -90,53 +95,65 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 		std::string inbetween = regex.substr(regexI + 1, closingI - regexI - 1);
 		Regex subRegex(inbetween);
 
-		int leftI = strI;
-		int matches = 0;
-		while (true) // checkpoint loop
+		std::vector<int> matchesStrI;
+		std::vector<int> matchCount;
+
+		subRegex.getCapturePermutations(str, strI, 0, matchesStrI, matchCount);
+
+		int nextLeftI = closingI + 2;
+		switch (type)
 		{
-			bool matchFound = false;
-			int rightI;
-			for (rightI = str.size() - 1; rightI >= leftI - 1; --rightI)
-			{
-				std::string newStr = str.substr(leftI, rightI - leftI + 1);
-				if (subRegex.isMatch(newStr, 0, 0))
-				{
-					matchFound = true;
-					break;
-				}
-			}
+		case '*':
+			for (int i = 0; i < matchesStrI.size(); ++i)
+				if (isMatch(str, nextLeftI, matchesStrI[i]))
+					return true;
 
-			if (!matchFound)
-				break;
+			return isMatch(str, nextLeftI, strI);
 
-			leftI = rightI + 1;
-			matches++;
+		case '+':
+			for (int i = 0; i < matchesStrI.size(); ++i)
+				if (isMatch(str, nextLeftI, matchesStrI[i]))
+					return true;
+
+			break;
+
+		case '_':
+			for (int i = 0; i < matchesStrI.size(); ++i)
+				if (matchCount[i] < 2 && isMatch(str, nextLeftI, matchesStrI[i]))
+					return true;
+
+			return isMatch(str, nextLeftI, strI);
+
+		default:
+			throw "this should never be thrown";
 		}
-
-		bool symbolCondition;
-		switch (regex[closingI + 1])
-		{
-		case '*': symbolCondition = true; break;
-		case '+': symbolCondition = matches > 0; break;
-		case '_': symbolCondition = matches < 2; break;
-		default: throw "this should never be thrown";
-		}
-
-		return symbolCondition && isMatch(str, closingI + 2, leftI);
 	}
 
 		break;
 
 	default:
-		if (regex[regexI] == str[strI] && isMatch(str, regexI + 1, strI + 1))
-			return true;
+		return regex[regexI] == str[strI] && isMatch(str, regexI + 1, strI + 1);
 
 		break;
 	}
 	return false;
 }
 
-// todo: add group (parentheses) support
+void Regex::getCapturePermutations(const std::string& str, int leftI, int matches, std::vector<int>& matchesStrI, std::vector<int>& matchCount)
+{
+	for (int rightI = leftI - 1; rightI < static_cast<int>(str.size()); ++rightI)
+	{
+		std::string newStr = str.substr(leftI, rightI - leftI + 1);
+		if (isMatch(newStr, 0, 0))
+		{
+			int newLeftI = rightI + 1;
+			int newMatches = matches + 1;
+			matchesStrI.push_back(newLeftI);
+			matchCount.push_back(newMatches);
+			getCapturePermutations(str, newLeftI, newMatches, matchesStrI, matchCount);
+		}
+	}
+}
 
 int main()
 {
