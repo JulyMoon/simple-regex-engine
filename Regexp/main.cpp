@@ -32,27 +32,23 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 	if (strI >= str.size() && regexI >= regex.size())
 		return true;
 
+	int nextRegexI = regexI + 1;
+
 	switch (regex[regexI])
 	{
 	case '?':
-		if (isMatch(str, regexI + 1, strI))
-			return true;
-
-		if (isMatch(str, regexI + 1, strI + 1))
-			return true;
-
-		break;
+		return isMatch(str, nextRegexI, strI) || isMatch(str, nextRegexI, strI + 1);
 
 	case '*':
 		for (int i = str.size(); i > strI - 1; --i)
-			if (isMatch(str, regexI + 1, i))
+			if (isMatch(str, nextRegexI, i))
 				return true;
 
 		break;
 
 	case '+':
 		for (int i = str.size(); i > strI; --i)
-			if (isMatch(str, regexI + 1, i))
+			if (isMatch(str, nextRegexI, i))
 				return true;
 
 		break;
@@ -104,11 +100,10 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 		switch (type)
 		{
 		case '*':
-			for (int i = 0; i < matchesStrI.size(); ++i)
-				if (isMatch(str, nextLeftI, matchesStrI[i]))
-					return true;
+			if (isMatch(str, nextLeftI, strI))
+				return true;
 
-			return isMatch(str, nextLeftI, strI);
+			// intended fallthrough
 
 		case '+':
 			for (int i = 0; i < matchesStrI.size(); ++i)
@@ -133,9 +128,8 @@ bool Regex::isMatch(const std::string& str, int regexI, int strI)
 
 	default:
 		return regex[regexI] == str[strI] && isMatch(str, regexI + 1, strI + 1);
-
-		break;
 	}
+
 	return false;
 }
 
